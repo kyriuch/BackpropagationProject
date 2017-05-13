@@ -1,8 +1,5 @@
 package sample;
 
-/**
- * Created by Tomek on 09.05.2017.
- */
 import java.util.*;
 
 public class NEURONHELP {

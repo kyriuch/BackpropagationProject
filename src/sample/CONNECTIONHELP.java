@@ -9,13 +9,11 @@ public class CONNECTIONHELP {
     double deltaWeight = 0;
 
     final NEURONHELP leftNeuron;
-    final NEURONHELP rightNeuron;
     static int counter = 0;
     final public int id; // auto increment, starts at 0
 
     public CONNECTIONHELP(NEURONHELP fromN, NEURONHELP toN) {
         leftNeuron = fromN;
-        rightNeuron = toN;
         id = counter;
         counter++;
     }
@@ -39,9 +37,5 @@ public class CONNECTIONHELP {
 
     public NEURONHELP getFromNeuron() {
         return leftNeuron;
-    }
-
-    public NEURONHELP getToNeuron() {
-        return rightNeuron;
     }
 }
