@@ -1,8 +1,15 @@
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.layout.GridPane?>
+<?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.canvas.Canvas?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<GridPane fx:controller="sample.Controller"
-          xmlns:fx="http://javafx.com/fxml" alignment="center" hgap="10" vgap="10">
-</GridPane>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.shape.Rectangle?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="375.0" prefWidth="447.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
+   <children>
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="200.0" layoutX="43.0" layoutY="43.0" stroke="BLACK" strokeType="INSIDE" width="200.0" />
+      <Canvas fx:id="canvas" height="200.0" layoutX="43.0" layoutY="43.0" width="200.0" />
+      <Button layoutX="272.0" layoutY="43.0" mnemonicParsing="false" onAction="#clear" text="Wyczyść" />
+      <Button layoutX="272.0" layoutY="100.0" mnemonicParsing="false" onAction="#check" text="Sprawdź" />
+   </children>
+</AnchorPane>

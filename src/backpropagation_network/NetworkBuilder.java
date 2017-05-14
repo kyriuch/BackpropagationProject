@@ -7,8 +7,9 @@ public class NetworkBuilder {
     double epsilon = 0.00000000001;
     double learningRate = 0.9f;
     double momentum = 0.7f;
-    double randomWeightMultiplier = 1;
-    private double minErrorCondition = 0.001;
+    double minErrorCondition = 0.001;
+
+    private double randomWeightMultiplier = 1;
     List<Neuron> inputLayer;
     List<Neuron> hiddenLayer;
     List<Neuron> outputLayer;

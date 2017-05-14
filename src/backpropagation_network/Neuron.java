@@ -7,23 +7,22 @@ import java.util.Map;
 public class Neuron {
 
     private List<Connection> connections;
+    private Connection biasConnection;
     private Map<Integer, Connection> connectionLookUp = new HashMap<>();
 
     private final int id;
     private static int idCounter = 0;
 
     private double output;
+    private final double bias = -1;
 
-    Neuron(List<Connection> connections) {
+    Neuron(List<Connection> connections, Connection biasConnection) {
         this.id = idCounter++;
 
         this.connections = connections;
+        this.connections.add(biasConnection);
+        this.biasConnection = biasConnection;
         this.connections.forEach(connection -> connectionLookUp.put(connection.getLeftNeuron().getId(), new Connection(connection.getLeftNeuron())));
-    }
-
-    Neuron(int biasOutput) {
-        this.output = output;
-        this.id = idCounter++;
     }
 
     Neuron() {
@@ -53,12 +52,14 @@ public class Neuron {
     public void calculateOutput() {
         double output = 0;
 
-        for(Connection connection:connections) {
+        for (Connection connection : connections) {
             Neuron leftNeuron = connection.getLeftNeuron();
 
-            output += connection.getConnectionWeight() * leftNeuron.getOutput();
+            output += (connection.getConnectionWeight() * leftNeuron.getOutput());
         }
 
-        this.output = 1.0 / (1.0 +  (Math.exp(-output)));
+        output += (bias * biasConnection.getConnectionWeight());
+
+        this.output = (1.0) / (1.0 + (Math.exp(-output)));
     }
 }

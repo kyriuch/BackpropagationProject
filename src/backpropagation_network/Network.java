@@ -1,6 +1,9 @@
 package backpropagation_network;
 
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,17 +23,28 @@ public class Network {
         this.epsilon = networkBuilder.epsilon;
         this.learningRate = networkBuilder.learningRate;
         this.momentum = networkBuilder.momentum;
-        this.minErrorCondition = networkBuilder.randomWeightMultiplier;
+        this.minErrorCondition = networkBuilder.minErrorCondition;
 
         this.inputLayer = networkBuilder.inputLayer;
         this.hiddenLayer = networkBuilder.hiddenLayer;
         this.outputLayer = networkBuilder.outputLayer;
     }
 
+    public void check(List<Double> input) {
+        setInputLayerOutputs(input);
+
+        activate();
+
+        System.out.print("ACTUAL: ");
+        for (int x = 0; x < outputLayer.size(); x++) {
+            System.out.println(outputLayer.get(x).getOutput());
+        }
+    }
+
     public void learn(List<List<Double>> inputs, List<List<Double>> expectedOutputs, int maxEras) {
         double error = 1;
 
-        for (int i = 0; i < maxEras || error > minErrorCondition; i++) {
+        for (int i = 0; i < maxEras && error > minErrorCondition; i++) {
             error = 0;
 
             for (int j = 0; j < inputs.size(); j++) { // for each data to learn
@@ -38,7 +52,7 @@ public class Network {
 
                 activate();
 
-                if(outputs.size() <= j) {
+                if(outputs.size() < j + 1) {
                     outputs.add(j, outputLayer.stream().mapToDouble(Neuron::getOutput).boxed().collect(Collectors.toList()));
                 } else {
                     outputs.set(j, outputLayer.stream().mapToDouble(Neuron::getOutput).boxed().collect(Collectors.toList()));
@@ -48,17 +62,12 @@ public class Network {
                     error += Math.pow(outputs.get(j).get(k) - expectedOutputs.get(j).get(k), 2);
                 }
 
-                applyBackpropagation(outputs.get(j));
+                applyBackpropagation(expectedOutputs.get(j));
             }
         }
 
         System.out.println("NN example with xor training");
         for (int p = 0; p < inputs.size(); p++) {
-            System.out.print("INPUTS: ");
-            for (int x = 0; x < inputs.get(p).size(); x++) {
-                System.out.print(inputs.get(p).get(x) + " ");
-            }
-
             System.out.print("EXPECTED: ");
             for (int x = 0; x < outputLayer.size(); x++) {
                 System.out.print(expectedOutputs.get(p).get(x) + " ");
@@ -87,15 +96,17 @@ public class Network {
     private void applyBackpropagation(List<Double> expectedOutput) {
 
         // normalization
-        expectedOutput = expectedOutput.stream().map(outputs -> {
-            if (outputs < 0) {
-                return 0 + epsilon;
-            } else if (outputs > 1) {
-                return 0 - epsilon;
+        final List<Double> expectedList = new ArrayList<>();
+
+        expectedOutput.forEach(output -> {
+            if(output < 0) {
+                expectedList.add(0 + epsilon);
+            } else if(output > 1) {
+                expectedList.add(1 - epsilon);
             } else {
-                return outputs;
+                expectedList.add(output);
             }
-        }).collect(Collectors.toList());
+        });
 
         int i = 0;
 
@@ -105,7 +116,7 @@ public class Network {
             for (Connection connection : connections) {
                 double ak = neuron.getOutput();
                 double ai = connection.getLeftNeuron().getOutput();
-                double desiredOutput = expectedOutput.get(i);
+                double desiredOutput = expectedList.get(i);
 
                 double partialDerivative = -ak * (1 - ak) * ai * (desiredOutput - ak);
                 double deltaWeight = -learningRate * partialDerivative;
@@ -117,8 +128,6 @@ public class Network {
 
             i++;
         }
-
-        final List<Double> expectedOutputs = expectedOutput;
 
         // update weights for the hidden layer
         hiddenLayer.forEach(neuron -> neuron.getConnections().forEach(connection -> {
@@ -132,14 +141,58 @@ public class Network {
                 double wjk = outNeuron.getConnection(neuron.getId()).getConnectionWeight();
                 double ak = outNeuron.getOutput();
 
-                sumKoutputs += (-(expectedOutputs.get(j) - ak) * ak * (1 - ak) * wjk);
+                sumKoutputs += (-(expectedList.get(j) - ak) * ak * (1 - ak) * wjk);
+
+                j++;
             }
 
             double partialDerivative = aj * (1 - aj) * ai * sumKoutputs;
             double deltaWeight = -learningRate * partialDerivative;
-            double newWeight = connection.getConnectionWeight() - deltaWeight;
+            double newWeight = connection.getConnectionWeight() + deltaWeight;
             connection.setDeltaWeight(deltaWeight);
-            connection.setConnectionWeight(newWeight + momentum + connection.getPreviousDeltaWeight());
+            connection.setConnectionWeight(newWeight + momentum * connection.getPreviousDeltaWeight());
         }));
+    }
+
+    public static int[][] convertTo2DWithoutUsingGetRGB(BufferedImage image) {
+        final byte[] pixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
+        final int width = image.getWidth();
+        final int height = image.getHeight();
+        final boolean hasAlphaChannel = image.getAlphaRaster() != null;
+
+        int[][] result = new int[height][width];
+        if (hasAlphaChannel) {
+            final int pixelLength = 4;
+            for (int pixel = 0, row = 0, col = 0; pixel < pixels.length; pixel += pixelLength) {
+                int argb = 0;
+                argb += (((int) pixels[pixel] & 0xff) << 24); // alpha
+                argb += ((int) pixels[pixel + 1] & 0xff); // blue
+                argb += (((int) pixels[pixel + 2] & 0xff) << 8); // green
+                argb += (((int) pixels[pixel + 3] & 0xff) << 16); // red
+                result[row][col] = argb;
+                col++;
+                if (col == width) {
+                    col = 0;
+                    row++;
+                }
+            }
+        } else {
+            final int pixelLength = 3;
+            for (int pixel = 0, row = 0, col = 0; pixel < pixels.length; pixel += pixelLength) {
+                int argb = 0;
+                argb += -16777216; // 255 alpha
+                argb += ((int) pixels[pixel] & 0xff); // blue
+                argb += (((int) pixels[pixel + 1] & 0xff) << 8); // green
+                argb += (((int) pixels[pixel + 2] & 0xff) << 16); // red
+                result[row][col] = argb;
+                col++;
+                if (col == width) {
+                    col = 0;
+                    row++;
+                }
+            }
+        }
+
+        return result;
     }
 }

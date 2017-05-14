@@ -13,13 +13,8 @@ public final class NeuronFactory {
         final List<Connection> connections = new ArrayList<>();
 
         leftNeurons.forEach(neuron -> connections.add(new Connection(neuron)));
-        connections.add(new Connection(biasNeuron));
 
-        return new Neuron(connections);
-    }
-
-    public static Neuron getBiasNeuron(int biasOutput) {
-        return new Neuron(biasOutput);
+        return new Neuron(connections, new Connection(biasNeuron));
     }
 
     public static Neuron getNeuronWithoutConnections() {
