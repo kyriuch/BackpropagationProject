@@ -11,6 +11,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.File;
@@ -54,7 +55,14 @@ public class Main extends Application {
 
         Arrays.asList(actualDir.listFiles()).forEach(file -> {
             try {
-                int[][] result = Network.convertTo2DWithoutUsingGetRGB(ImageIO.read(file));
+                BufferedImage bufferedImage = ImageIO.read(file);
+                BufferedImage resizedImage = new BufferedImage(30, 30, bufferedImage.getType());
+                Graphics2D graphics2D = resizedImage.createGraphics();
+                graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                graphics2D.drawImage(bufferedImage, 0, 0, 30, 30, 0, 0, bufferedImage.getWidth(), bufferedImage.getHeight(), null);
+                graphics2D.dispose();
+
+                int[][] result = Network.convertTo2DWithoutUsingGetRGB(resizedImage);
 
                 List<Double> oneInput = new ArrayList<>();
 
@@ -71,6 +79,8 @@ public class Main extends Application {
         });
 
         List<List<Double>> expectedOutputs = new ArrayList<>();
+
+        /**
         expectedOutputs.add(Arrays.asList(0.0, 0.0, 0.0, 0.0, 0.0));
         expectedOutputs.add(Arrays.asList(0.0, 0.0, 0.0, 0.0, 1.0));
         expectedOutputs.add(Arrays.asList(0.0, 0.0, 0.0, 1.0, 0.0));
@@ -103,6 +113,17 @@ public class Main extends Application {
         expectedOutputs.add(Arrays.asList(0.0, 0.0, 0.0, 0.0, 0.0));
         expectedOutputs.add(Arrays.asList(0.0, 0.0, 0.0, 0.0, 0.0));
         expectedOutputs.add(Arrays.asList(0.0, 0.0, 0.0, 0.0, 0.0));
+         **/
+
+        for (int i = 0; i < 9; i++) {
+            expectedOutputs.add(Collections.singletonList(1.0));
+        }
+
+        for (int i = 0; i < 23; i++) {
+            expectedOutputs.add(Collections.singletonList(0.0));
+        }
+
+
 
         network.learn(inputs, expectedOutputs, 5000);
     }
@@ -120,22 +141,9 @@ public class Main extends Application {
     private List<Neuron> buildHiddenLayer() {
         List<Neuron> firstHiddenLayer = new ArrayList<>();
 
-        firstHiddenLayer.add(NeuronFactory.getNeuronWithConnections(inputLayer, biasNeuron));
-        firstHiddenLayer.add(NeuronFactory.getNeuronWithConnections(inputLayer, biasNeuron));
-        firstHiddenLayer.add(NeuronFactory.getNeuronWithConnections(inputLayer, biasNeuron));
-        firstHiddenLayer.add(NeuronFactory.getNeuronWithConnections(inputLayer, biasNeuron));
-        firstHiddenLayer.add(NeuronFactory.getNeuronWithConnections(inputLayer, biasNeuron));
-        firstHiddenLayer.add(NeuronFactory.getNeuronWithConnections(inputLayer, biasNeuron));
-        firstHiddenLayer.add(NeuronFactory.getNeuronWithConnections(inputLayer, biasNeuron));
-        firstHiddenLayer.add(NeuronFactory.getNeuronWithConnections(inputLayer, biasNeuron));
-        firstHiddenLayer.add(NeuronFactory.getNeuronWithConnections(inputLayer, biasNeuron));
-        firstHiddenLayer.add(NeuronFactory.getNeuronWithConnections(inputLayer, biasNeuron));
-        firstHiddenLayer.add(NeuronFactory.getNeuronWithConnections(inputLayer, biasNeuron));
-        firstHiddenLayer.add(NeuronFactory.getNeuronWithConnections(inputLayer, biasNeuron));
-        firstHiddenLayer.add(NeuronFactory.getNeuronWithConnections(inputLayer, biasNeuron));
-        firstHiddenLayer.add(NeuronFactory.getNeuronWithConnections(inputLayer, biasNeuron));
-        firstHiddenLayer.add(NeuronFactory.getNeuronWithConnections(inputLayer, biasNeuron));
-        firstHiddenLayer.add(NeuronFactory.getNeuronWithConnections(inputLayer, biasNeuron));
+        for(int i = 0; i < 100; i ++) {
+            firstHiddenLayer.add(NeuronFactory.getNeuronWithConnections(inputLayer, biasNeuron));
+        }
 
         return firstHiddenLayer;
     }
@@ -143,10 +151,7 @@ public class Main extends Application {
     private List<Neuron> buildOutputLayer() {
         List<Neuron> outputLayer = new ArrayList<>();
 
-        for(int i = 0; i < 5; i++) {
-            outputLayer.add(NeuronFactory.getNeuronWithConnections(hiddenLayer, biasNeuron));
-        }
-
+        outputLayer.add(NeuronFactory.getNeuronWithConnections(hiddenLayer, biasNeuron));
 
         return outputLayer;
     }

@@ -3,8 +3,10 @@ package backpropagation_network;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 public class Network {
@@ -17,7 +19,7 @@ public class Network {
     private List<Neuron> hiddenLayer;
     private List<Neuron> outputLayer;
 
-    private List<List<Double>> outputs = new ArrayList<>();
+    private Map<Integer, List<Double>> outputs = new HashMap<>();
 
     Network(NetworkBuilder networkBuilder) {
         this.epsilon = networkBuilder.epsilon;
@@ -47,26 +49,35 @@ public class Network {
         for (int i = 0; i < maxEras && error > minErrorCondition; i++) {
             error = 0;
 
-            for (int j = 0; j < inputs.size(); j++) { // for each data to learn
-                setInputLayerOutputs(inputs.get(j));
+            int j = 0;
+            List<Integer> usedIds = new ArrayList<>();
+
+            while (j < inputs.size()) {
+                int randomNum;
+
+                do {
+                    randomNum = ThreadLocalRandom.current().nextInt(0, inputs.size());
+                } while (usedIds.contains(randomNum));
+
+                usedIds.add(randomNum);
+
+                setInputLayerOutputs(inputs.get(randomNum));
 
                 activate();
 
-                if(outputs.size() < j + 1) {
-                    outputs.add(j, outputLayer.stream().mapToDouble(Neuron::getOutput).boxed().collect(Collectors.toList()));
-                } else {
-                    outputs.set(j, outputLayer.stream().mapToDouble(Neuron::getOutput).boxed().collect(Collectors.toList()));
+
+                outputs.put(randomNum, outputLayer.stream().mapToDouble(Neuron::getOutput).boxed().collect(Collectors.toList()));
+
+                for (int k = 0; k < outputs.get(randomNum).size(); k++) {
+                    error += Math.pow(outputs.get(randomNum).get(k) - expectedOutputs.get(randomNum).get(k), 2);
                 }
 
-                for (int k = 0; k < outputs.get(j).size(); k++) {
-                    error += Math.pow(outputs.get(j).get(k) - expectedOutputs.get(j).get(k), 2);
-                }
+                applyBackpropagation(expectedOutputs.get(randomNum));
 
-                applyBackpropagation(expectedOutputs.get(j));
+                j++;
             }
         }
 
-        System.out.println("NN example with xor training");
         for (int p = 0; p < inputs.size(); p++) {
             System.out.print("EXPECTED: ");
             for (int x = 0; x < outputLayer.size(); x++) {
@@ -99,9 +110,9 @@ public class Network {
         final List<Double> expectedList = new ArrayList<>();
 
         expectedOutput.forEach(output -> {
-            if(output < 0) {
+            if (output < 0) {
                 expectedList.add(0 + epsilon);
-            } else if(output > 1) {
+            } else if (output > 1) {
                 expectedList.add(1 - epsilon);
             } else {
                 expectedList.add(output);
@@ -137,7 +148,7 @@ public class Network {
 
             int j = 0;
 
-            for(Neuron outNeuron : outputLayer) {
+            for (Neuron outNeuron : outputLayer) {
                 double wjk = outNeuron.getConnection(neuron.getId()).getConnectionWeight();
                 double ak = outNeuron.getOutput();
 
