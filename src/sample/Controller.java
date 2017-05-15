@@ -43,20 +43,70 @@ public class Controller implements Initializable {
 
         bufferedImage = ImageIO.read(new File("example.jpg"));
 
-        BufferedImage resizedImage = new BufferedImage(30, 30, bufferedImage.getType());
+        int[][] result = Network.convertTo2DWithoutUsingGetRGB(bufferedImage);
+
+        int firstYPixel = -1;
+        int lastYPixel = -1;
+        int firstXPixel = -1;
+        int lastXPixel = -1;
+
+        for(int x = 0; x < result.length; x++) {
+            for (int y = 0; y < result[x].length; y++) {
+
+                if(result[y][x] != -1) {
+                    if(firstYPixel == -1) {
+                        firstYPixel = y;
+                        lastYPixel = y;
+                        firstXPixel = x;
+                        lastXPixel = x;
+                    }
+
+                    if(y < firstYPixel) {
+                        firstYPixel = y;
+                    }
+
+                    if(y > lastXPixel) {
+                        lastYPixel = y;
+                    }
+
+                    if(x > lastXPixel) {
+                        lastXPixel = x;
+                    }
+
+                    if(x < firstXPixel) {
+                        firstXPixel = x;
+                    }
+                }
+            }
+        }
+
+        System.out.println(firstXPixel + ":" + lastXPixel);
+        System.out.println(firstYPixel + ":" + lastYPixel);
+
+        BufferedImage subImage = bufferedImage.getSubimage(firstXPixel - 2, firstYPixel - 2, lastXPixel - firstXPixel + 4, lastYPixel - firstYPixel + 4);
+
+        ImageIO.write(subImage, "jpg", new File("example.jpg"));
+
+
+        BufferedImage resizedImage = new BufferedImage(36, 36, subImage.getType());
         Graphics2D graphics2D = resizedImage.createGraphics();
         graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        graphics2D.drawImage(bufferedImage, 0, 0, 30, 30, 0, 0, bufferedImage.getWidth(), bufferedImage.getHeight(), null);
+        graphics2D.drawImage(subImage, 0, 0, 36, 36, 0, 0, bufferedImage.getWidth(), bufferedImage.getHeight(), null);
         graphics2D.dispose();
 
-        int[][] result = Network.convertTo2DWithoutUsingGetRGB(resizedImage);
+        result = Network.convertTo2DWithoutUsingGetRGB(resizedImage);
 
-        java.util.List<Double> oneInput = new ArrayList<>();
+        List<Double> oneInput = new ArrayList<>();
 
-        for (int[] aResult : result) {
-            for (int anAResult : aResult) {
-                oneInput.add((double) anAResult);
+        for(int i = 0; i < 36; i += 3) {
+            int counter = 0;
+            for(int j = 0; j < 36; j += 3) {
+                if(result[i][j] != -1) {
+                    counter++;
+                }
             }
+
+            oneInput.add((double) counter);
         }
 
         Main.network.check(oneInput);

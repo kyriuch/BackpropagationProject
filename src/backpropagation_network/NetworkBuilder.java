@@ -35,23 +35,28 @@ public class NetworkBuilder {
         });
     }
 
-    public void setEpsilon(double epsilon) {
+    public NetworkBuilder setEpsilon(double epsilon) {
         this.epsilon = epsilon;
+        return this;
     }
 
-    public void setLearningRate(double learningRate) {
+    public NetworkBuilder setLearningRate(double learningRate) {
         this.learningRate = learningRate;
+        return this;
     }
 
-    public void setMomentum(double momentum) {
+    public NetworkBuilder setMomentum(double momentum) {
         this.momentum = momentum;
+        return this;
     }
 
-    public void setRandomWeightMultiplier(double randomWeightMultiplier) {
+    public NetworkBuilder setRandomWeightMultiplier(double randomWeightMultiplier) {
         this.randomWeightMultiplier = randomWeightMultiplier;
+        return this;
     }
 
-    public void setMinErrorCondition(double minErrorCondition) {
+    public NetworkBuilder setMinErrorCondition(double minErrorCondition) {
         this.minErrorCondition = minErrorCondition;
+        return this;
     }
 }

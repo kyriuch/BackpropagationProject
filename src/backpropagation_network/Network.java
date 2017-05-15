@@ -100,8 +100,27 @@ public class Network {
     }
 
     private void activate() {
-        hiddenLayer.forEach(Neuron::calculateOutput);
-        outputLayer.forEach(Neuron::calculateOutput);
+        hiddenLayer.forEach(neuron -> {
+            Thread t = new Thread(neuron::calculateOutput);
+
+            t.start();
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+
+        outputLayer.forEach(neuron -> {
+            Thread t = new Thread(neuron::calculateOutput);
+
+            t.start();
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     private void applyBackpropagation(List<Double> expectedOutput) {
