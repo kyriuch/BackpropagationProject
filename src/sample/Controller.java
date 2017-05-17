@@ -9,6 +9,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Paint;
+import net.coobird.thumbnailator.Thumbnails;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -45,71 +46,83 @@ public class Controller implements Initializable {
 
         int[][] result = Network.convertTo2DWithoutUsingGetRGB(bufferedImage);
 
-        int firstYPixel = -1;
-        int lastYPixel = -1;
-        int firstXPixel = -1;
-        int lastXPixel = -1;
+        int firstX = -1;
+        int firstY = -1;
+        int lastX = -1;
+        int lastY = -1;
 
-        for(int x = 0; x < result.length; x++) {
-            for (int y = 0; y < result[x].length; y++) {
-
-                if(result[y][x] != -1) {
-                    if(firstYPixel == -1) {
-                        firstYPixel = y;
-                        lastYPixel = y;
-                        firstXPixel = x;
-                        lastXPixel = x;
+        for(int y = 0; y < result.length; y++) {
+            for(int x = 0; x < result.length; x++) {
+                if(result[x][y] != -1) {
+                    if(firstX == -1) {
+                        firstX = y;
+                        lastX = y;
+                        firstY = x;
+                        lastY = x;
                     }
 
-                    if(y < firstYPixel) {
-                        firstYPixel = y;
+                    if(x > lastY) {
+                        lastY = x;
                     }
 
-                    if(y > lastXPixel) {
-                        lastYPixel = y;
+                    if(x < firstY) {
+                        firstY = x;
                     }
 
-                    if(x > lastXPixel) {
-                        lastXPixel = x;
+                    if(y > lastX) {
+                        lastX = y;
                     }
 
-                    if(x < firstXPixel) {
-                        firstXPixel = x;
+                    if(y < firstX) {
+                        firstX = y;
                     }
                 }
             }
         }
 
-        System.out.println(firstXPixel + ":" + lastXPixel);
-        System.out.println(firstYPixel + ":" + lastYPixel);
-
-        BufferedImage subImage = bufferedImage.getSubimage(firstXPixel - 2, firstYPixel - 2, lastXPixel - firstXPixel + 4, lastYPixel - firstYPixel + 4);
+        BufferedImage subImage = bufferedImage.getSubimage(firstX, firstY, lastX - firstX, lastY - firstY);
 
         ImageIO.write(subImage, "jpg", new File("example.jpg"));
 
 
-        BufferedImage resizedImage = new BufferedImage(36, 36, subImage.getType());
-        Graphics2D graphics2D = resizedImage.createGraphics();
-        graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        graphics2D.drawImage(subImage, 0, 0, 36, 36, 0, 0, bufferedImage.getWidth(), bufferedImage.getHeight(), null);
-        graphics2D.dispose();
+        BufferedImage resizedImage = Thumbnails.of(subImage).forceSize(100, 100).asBufferedImage();
 
-        result = Network.convertTo2DWithoutUsingGetRGB(resizedImage);
+        result = Main.convertTo2DWithoutUsingGetRGB(resizedImage);
 
-        List<Double> oneInput = new ArrayList<>();
+        List<Double> horizontalLine = new ArrayList<>();
+        List<Double> verticalLine = new ArrayList<>();
 
-        for(int i = 0; i < 36; i += 3) {
-            int counter = 0;
-            for(int j = 0; j < 36; j += 3) {
-                if(result[i][j] != -1) {
-                    counter++;
+        for (int i = 0; i < 100; i += 2) {
+            int counterX = 0;
+            int counterY = 0;
+
+            for (int j = 0; j < 100; j += 2) {
+                if (result[i][j] != -1) {
+                    counterX++;
+                }
+
+                if (result[j][i] != -1) {
+                    counterY++;
                 }
             }
 
-            oneInput.add((double) counter);
+            horizontalLine.add((double) counterX);
+            verticalLine.add((double) counterY);
         }
 
-        Main.network.check(oneInput);
+        List<Double> summaryList = new ArrayList<>();
+
+        final Optional<Double> max = horizontalLine.stream().max(Comparator.naturalOrder());
+        final Optional<Double> min = horizontalLine.stream().min(Comparator.naturalOrder());
+
+        horizontalLine.forEach(digit -> summaryList.add((digit - min.get()) / (max.get() - min.get())));
+
+        final Optional<Double> max2 = verticalLine.stream().max(Comparator.naturalOrder());
+        final Optional<Double> min2 = verticalLine.stream().min(Comparator.naturalOrder());
+
+        verticalLine.forEach(digit -> summaryList.add((digit - min2.get()) / (max2.get() - min2.get())));
+
+        System.out.println(Main.network.checkDataSet(summaryList));
     }
 
     @FXML
@@ -124,7 +137,7 @@ public class Controller implements Initializable {
         GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
 
         canvas.setOnMouseDragged(e -> {
-            double size = 5.0;
+            double size = 2;
             double x = e.getX() - size / 2;
             double y = e.getY() - size / 2;
 

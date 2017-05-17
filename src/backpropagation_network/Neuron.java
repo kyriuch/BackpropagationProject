@@ -16,6 +16,8 @@ public class Neuron {
     private double output;
     private final double bias = -1;
 
+    private double singalError;
+
     Neuron(List<Connection> connections, Connection biasConnection) {
         this.id = idCounter++;
 
@@ -61,5 +63,13 @@ public class Neuron {
         output += (bias * biasConnection.getConnectionWeight());
 
         this.output = (1.0) / (1.0 + (Math.exp(-output)));
+    }
+
+    public double getSingalError() {
+        return singalError;
+    }
+
+    public void setSingalError(double singalError) {
+        this.singalError = singalError;
     }
 }
