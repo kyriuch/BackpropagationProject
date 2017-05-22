@@ -1,5 +1,7 @@
 package network;
 
+import sample.Controller;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,13 +18,18 @@ public class Network {
     private List<List<Double>> expectedOutputs = new ArrayList<>();
     private Map<Integer, List<Double>> acutalOutputs = new HashMap<>();
 
+    private int iterator = 0;
+    private boolean isEnded = false;
+    private double overallError;
+    private Controller controller;
 
     //------ CONFIGURATION --------\\
 
-    private int maxEras = 5000;
+    private int maxEras = 500000;
     private double minError = 0.0001;
     private double learningRate = 0.2f;
     private double momentum = 0.4f;
+
 
     public Network(Layer inputLayer, Layer hiddenLayer, Layer outputLayer) {
         this.inputLayer = inputLayer;
@@ -104,10 +111,10 @@ public class Network {
     }
 
     public void learn() {
-        int i = 0;
-        double overallError;
+        isEnded = false;
 
         do {
+
             List<Integer> usedInputs = new ArrayList<>();
             for (int j = 0; j < inputs.size(); j++) {
                 int currentInput;
@@ -138,12 +145,17 @@ public class Network {
             }
 
             overallError = calculateOverallError();
-            System.out.println(overallError);
-            i++;
-        } while (i < 50000 && overallError > minError);
 
-        System.out.println(i);
+            if(iterator % (maxEras / 10) == 0) {
+                controller.appendLine("Era " + iterator + ".");
+                controller.appendLine("Błąd ogólny: " + overallError);
+                controller.appendLine("Osiągnięty % błędu: " + (minError / overallError * 100) + "%");
+            }
 
+            iterator++;
+        } while (iterator < maxEras && overallError > minError);
+
+        isEnded = true;
         System.out.println("ended learning");
     }
 
@@ -160,5 +172,49 @@ public class Network {
         outputLayer.list.forEach(neuron -> outputs.add(neuron.getOutput()));
 
         return outputs;
+    }
+
+    public int getMaxEras() {
+        return maxEras;
+    }
+
+    public int getIterator() {
+        return iterator;
+    }
+
+    public boolean isEnded() {
+        return isEnded;
+    }
+
+    public Layer getInputLayer() {
+        return inputLayer;
+    }
+
+    public void setMaxEras(int maxEras) {
+        this.maxEras = maxEras;
+    }
+
+    public void setLearningRate(double learningRate) {
+        this.learningRate = learningRate;
+    }
+
+    public void setMomentum(double momentum) {
+        this.momentum = momentum;
+    }
+
+    public void setMinError(double minError) {
+        this.minError = minError;
+    }
+
+    public double getOverallError() {
+        return overallError;
+    }
+
+    public double getMinError() {
+        return minError;
+    }
+
+    public void setController(Controller controller) {
+        this.controller = controller;
     }
 }

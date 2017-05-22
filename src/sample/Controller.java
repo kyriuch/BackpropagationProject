@@ -1,19 +1,21 @@
 package sample;
 
-import backpropagation_network.Network;
+import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.image.Image;
+import javafx.scene.control.*;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Paint;
 import net.coobird.thumbnailator.Thumbnails;
+import network.*;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.awt.Graphics2D;
+import java.awt.image.DataBufferByte;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -22,29 +24,131 @@ import java.util.List;
 
 public class Controller implements Initializable {
 
+    private Network network;
+
+    private int[][] convertTo2DWithoutUsingGetRGB(BufferedImage image) {
+        final byte[] pixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
+        final int width = image.getWidth();
+        final int height = image.getHeight();
+        final boolean hasAlphaChannel = image.getAlphaRaster() != null;
+
+        int[][] result = new int[height][width];
+        if (hasAlphaChannel) {
+            final int pixelLength = 4;
+            for (int pixel = 0, row = 0, col = 0; pixel < pixels.length; pixel += pixelLength) {
+                int argb = 0;
+                argb += (((int) pixels[pixel] & 0xff) << 24); // alpha
+                argb += ((int) pixels[pixel + 1] & 0xff); // blue
+                argb += (((int) pixels[pixel + 2] & 0xff) << 8); // green
+                argb += (((int) pixels[pixel + 3] & 0xff) << 16); // red
+                result[row][col] = argb;
+                col++;
+                if (col == width) {
+                    col = 0;
+                    row++;
+                }
+            }
+        } else {
+            final int pixelLength = 3;
+            for (int pixel = 0, row = 0, col = 0; pixel < pixels.length; pixel += pixelLength) {
+                int argb = 0;
+                argb += -16777216; // 255 alpha
+                argb += ((int) pixels[pixel] & 0xff); // blue
+                argb += (((int) pixels[pixel + 1] & 0xff) << 8); // green
+                argb += (((int) pixels[pixel + 2] & 0xff) << 16); // red
+                result[row][col] = argb;
+                col++;
+                if (col == width) {
+                    col = 0;
+                    row++;
+                }
+            }
+        }
+
+        return result;
+
+/*    private void lastStart() {
+
+
+        network.learn(inputs, expectedOutputs, 5000);
+    }*/
+    }
+
+    private final char[] actualLetters = {'1', '2', '3', '4'};
+
+    private List<Double> getExpectedOutput(String digit) {
+        if (digit.charAt(0) == actualLetters[0]) {
+            return Arrays.asList(1.0, 0.0, 0.0, 0.0);
+        } else if (digit.charAt(0) == actualLetters[1]) {
+            return Arrays.asList(0.0, 1.0, 0.0, 0.0);
+        } else if (digit.charAt(0) == actualLetters[2]) {
+            return Arrays.asList(0.0, 0.0, 1.0, 0.0);
+        } else if (digit.charAt(0) == actualLetters[3]) {
+            return Arrays.asList(0.0, 0.0, 0.0, 1.0);
+        } else {
+            return null;
+        }
+
+    }
+
     @FXML
     private Canvas canvas;
 
     @FXML
+    private TextArea outputs;
+
+    @FXML
+    private Label networkAnswer;
+
+    @FXML
+    private ProgressBar learnProgressBar;
+
+    @FXML
+    private ProgressBar errorProgressBar;
+
+    @FXML
+    private TextField erasTextField;
+
+    @FXML
+    private TextField learningRateTextField;
+
+    @FXML
+    private TextField momentumTextField;
+
+    @FXML
+    private TextField hiddenNeuronsTextField;
+
+    @FXML
+    private TextField inputsTextField;
+
+    @FXML
+    private TextField minimumErrorTextField;
+
+    @FXML
     private void check() throws IOException {
+        if(network == null) {
+            return;
+        }
+
         WritableImage writableImage = new WritableImage((int) canvas.getWidth(), (int) canvas.getHeight());
         canvas.snapshot(null, writableImage);
 
         BufferedImage bufferedImage = SwingFXUtils.fromFXImage(writableImage, null);
 
-        BufferedImage imageRGB = new BufferedImage(bufferedImage.getWidth(), bufferedImage.getHeight(), BufferedImage.OPAQUE);
+        BufferedImage imageRGB = new BufferedImage(bufferedImage.getWidth(), bufferedImage.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
 
         Graphics2D g = imageRGB.createGraphics();
         g.drawImage(bufferedImage, 0, 0, null);
         g.dispose();
 
-        ImageIO.write(imageRGB, "jpg", new File("example.jpg"));
+        ImageIO.write(imageRGB, "png", new File("example.png"));
 
         // reading
 
-        bufferedImage = ImageIO.read(new File("example.jpg"));
+        bufferedImage = ImageIO.read(new File("example.png"));
 
-        int[][] result = Network.convertTo2DWithoutUsingGetRGB(bufferedImage);
+
+        int[][] result = convertTo2DWithoutUsingGetRGB(bufferedImage);
 
         int firstX = -1;
         int firstY = -1;
@@ -80,34 +184,31 @@ public class Controller implements Initializable {
             }
         }
 
+        firstX -= 2;
+        firstY -= 2;
+        lastX += 2;
+        lastY += 2;
+
         BufferedImage subImage = bufferedImage.getSubimage(firstX, firstY, lastX - firstX, lastY - firstY);
 
-        ImageIO.write(subImage, "jpg", new File("example.jpg"));
-
+        ImageIO.write(subImage, "png", new File("example.png"));
 
         BufferedImage resizedImage = Thumbnails.of(subImage).forceSize(100, 100).asBufferedImage();
 
-        result = Main.convertTo2DWithoutUsingGetRGB(resizedImage);
+        result = convertTo2DWithoutUsingGetRGB(resizedImage);
 
         List<Double> horizontalLine = new ArrayList<>();
-        List<Double> verticalLine = new ArrayList<>();
 
-        for (int i = 0; i < 100; i += 2) {
+        for (int i = 0; i < 100; i += 100 / network.getInputLayer().getSize()) {
             int counterX = 0;
-            int counterY = 0;
 
-            for (int j = 0; j < 100; j += 2) {
+            for (int j = 0; j < 100; j += 100 / network.getInputLayer().getSize()) {
                 if (result[i][j] != -1) {
                     counterX++;
-                }
-
-                if (result[j][i] != -1) {
-                    counterY++;
                 }
             }
 
             horizontalLine.add((double) counterX);
-            verticalLine.add((double) counterY);
         }
 
         List<Double> summaryList = new ArrayList<>();
@@ -117,12 +218,11 @@ public class Controller implements Initializable {
 
         horizontalLine.forEach(digit -> summaryList.add((digit - min.get()) / (max.get() - min.get())));
 
-        final Optional<Double> max2 = verticalLine.stream().max(Comparator.naturalOrder());
-        final Optional<Double> min2 = verticalLine.stream().min(Comparator.naturalOrder());
+        List<Double> outputList = network.checkDataSet(summaryList);
 
-        verticalLine.forEach(digit -> summaryList.add((digit - min2.get()) / (max2.get() - min2.get())));
+        networkAnswer.setText("Wprowadzona liczba to najprawdopodobniej: " + actualLetters[outputList.indexOf(Collections.max(outputList))]);
 
-        System.out.println(Main.network.checkDataSet(summaryList));
+        outputs.appendText(outputList.toString() + "\n");
     }
 
     @FXML
@@ -131,6 +231,124 @@ public class Controller implements Initializable {
         graphicsContext.clearRect(0, 0, canvas.getHeight(), canvas.getWidth());
     }
 
+
+
+    @FXML
+    private void learn() {
+        errorProgressBar.setProgress(0.0);
+        learnProgressBar.setProgress(0.0);
+
+        int eras = Integer.parseInt(erasTextField.getText());
+        double learningRate = Double.parseDouble(learningRateTextField.getText());
+        double momentum = Double.parseDouble(momentumTextField.getText());
+        double minError = Double.parseDouble(minimumErrorTextField.getText());
+        int hiddenNeurons = Integer.parseInt(hiddenNeuronsTextField.getText());
+        int inputs = Integer.parseInt(inputsTextField.getText());
+
+        Layer inputLayer;
+
+        if(inputs >= 10 && inputs <= 100 && inputs % 5 == 0) {
+            inputLayer = new InputLayer(inputs);
+        } else {
+            inputLayer = new InputLayer(20);
+        }
+
+        Layer hiddenLayer;
+
+        if(hiddenNeurons > 0 && hiddenNeurons < 20) {
+            hiddenLayer = new HiddenLayer(hiddenNeurons, inputLayer);
+        } else {
+            hiddenLayer = new HiddenLayer(4, inputLayer);
+        }
+
+        Layer outputLayer = new OutputLayer(4, hiddenLayer);
+
+        network = new Network(inputLayer, hiddenLayer, outputLayer);
+        network.setController(this);
+
+        if(minError < 1.0 && minError > 0.000001) {
+            network.setMinError(minError);
+        }
+
+        if(learningRate < 1.0 && learningRate > 0.0) {
+            network.setLearningRate(learningRate);
+        }
+
+        if(momentum < 1.0 && momentum > 0.0) {
+            network.setMomentum(momentum);
+        }
+
+        if(eras > 0 && eras < 10000000) {
+            network.setMaxEras(eras);
+        }
+
+        File actualDir = new File(".\\images");
+
+        Arrays.asList(actualDir.listFiles()).forEach(file -> {
+            try {
+                BufferedImage bufferedImage = ImageIO.read(file);
+
+
+                BufferedImage scaledImage = Thumbnails.of(bufferedImage).forceSize(100, 100).asBufferedImage();
+
+
+                int[][] result = convertTo2DWithoutUsingGetRGB(scaledImage);
+
+                List<Double> horizontalLine = new ArrayList<>();
+
+                for (int i = 0; i < 100; i += (100 / network.getInputLayer().getSize())) {
+                    int counterX = 0;
+
+                    for (int j = 0; j < 100; j += (100 / network.getInputLayer().getSize())) {
+                        if (result[i][j] != -1) {
+                            counterX++;
+                        }
+
+                    }
+
+                    horizontalLine.add((double) counterX);
+                }
+
+                List<Double> summaryList = new ArrayList<>();
+
+                final Optional<Double> max = horizontalLine.stream().max(Comparator.naturalOrder());
+                final Optional<Double> min = horizontalLine.stream().min(Comparator.naturalOrder());
+
+                horizontalLine.forEach(digit -> summaryList.add((digit - min.get()) / (max.get() - min.get())));
+
+                network.addOneDataSet(summaryList, getExpectedOutput(file.getName().split("_")[0]));
+
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+        new Thread(network::learn).start();
+
+        new Thread(() -> {
+            double progress;
+
+            do {
+                progress = (double) network.getIterator() / (double) network.getMaxEras();
+
+                learnProgressBar.setProgress(progress);
+
+                progress = network.getMinError() / network.getOverallError();
+
+                if(progress <= 1.0 && progress != Double.POSITIVE_INFINITY) {
+                    errorProgressBar.setProgress(progress);
+                }
+            } while(!network.isEnded());
+        }).start();
+
+    }
+
+    public void appendLine(String text) {
+        Platform.runLater(() -> {
+            outputs.appendText(text + "\n");
+        });
+    }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
