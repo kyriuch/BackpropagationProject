@@ -7,13 +7,13 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.*?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="496.0" prefWidth="657.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="635.0" prefWidth="657.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
    <children>
       <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="200.0" layoutX="43.0" layoutY="54.0" stroke="BLACK" strokeType="INSIDE" width="200.0" />
       <Canvas fx:id="canvas" height="200.0" layoutX="43.0" layoutY="54.0" width="200.0" />
       <Button layoutX="43.0" layoutY="268.0" mnemonicParsing="false" onAction="#clear" text="Wyczyść okno" />
       <Button layoutX="153.0" layoutY="268.0" mnemonicParsing="false" onAction="#check" text="Oblicz wyjście" />
-      <TextArea fx:id="outputs" editable="false" layoutX="43.0" layoutY="376.0" prefHeight="91.0" prefWidth="591.0" />
+      <TextArea fx:id="outputs" editable="false" layoutX="43.0" layoutY="376.0" prefHeight="230.0" prefWidth="591.0" />
       <Label fx:id="networkAnswer" layoutX="272.0" layoutY="293.0">
          <font>
             <Font size="18.0" />

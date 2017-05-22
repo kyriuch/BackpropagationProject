@@ -26,7 +26,7 @@ public class Controller implements Initializable {
 
     private Network network;
 
-    private int[][] convertTo2DWithoutUsingGetRGB(BufferedImage image) {
+    private int[][] convertTo2DWithoutUsingGetRGB(BufferedImage image) { // metoda konwertująca obraz na tablicę pikseli
         final byte[] pixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
         final int width = image.getWidth();
         final int height = image.getHeight();
@@ -74,9 +74,9 @@ public class Controller implements Initializable {
     }*/
     }
 
-    private final char[] actualLetters = {'1', '2', '3', '4'};
+    private final char[] actualLetters = {'1', '2', '3', '4'}; // aktualnie rozpatrywane znaki
 
-    private List<Double> getExpectedOutput(String digit) {
+    private List<Double> getExpectedOutput(String digit) { // podanie oczekiwanego wyniku sieci z nazwy pliku
         if (digit.charAt(0) == actualLetters[0]) {
             return Arrays.asList(1.0, 0.0, 0.0, 0.0);
         } else if (digit.charAt(0) == actualLetters[1]) {
@@ -125,13 +125,13 @@ public class Controller implements Initializable {
     private TextField minimumErrorTextField;
 
     @FXML
-    private void check() throws IOException {
+    private void check() throws IOException { // obliczenie wyniku dla obecnie wprowadzonego obrazu
         if(network == null) {
             return;
         }
 
         WritableImage writableImage = new WritableImage((int) canvas.getWidth(), (int) canvas.getHeight());
-        canvas.snapshot(null, writableImage);
+        canvas.snapshot(null, writableImage); // snapshot okna do rysowania
 
         BufferedImage bufferedImage = SwingFXUtils.fromFXImage(writableImage, null);
 
@@ -155,7 +155,7 @@ public class Controller implements Initializable {
         int lastX = -1;
         int lastY = -1;
 
-        for(int y = 0; y < result.length; y++) {
+        for(int y = 0; y < result.length; y++) { // wycięcie niepotrzebnego tła z narysowanego obrazu
             for(int x = 0; x < result.length; x++) {
                 if(result[x][y] != -1) {
                     if(firstX == -1) {
@@ -189,17 +189,17 @@ public class Controller implements Initializable {
         lastX += 2;
         lastY += 2;
 
-        BufferedImage subImage = bufferedImage.getSubimage(firstX, firstY, lastX - firstX, lastY - firstY);
+        BufferedImage subImage = bufferedImage.getSubimage(firstX, firstY, lastX - firstX, lastY - firstY); // przygotowanie obrazu z wyciętym tłem
 
         ImageIO.write(subImage, "png", new File("example.png"));
 
         BufferedImage resizedImage = Thumbnails.of(subImage).forceSize(100, 100).asBufferedImage();
 
-        result = convertTo2DWithoutUsingGetRGB(resizedImage);
+        result = convertTo2DWithoutUsingGetRGB(resizedImage); // utworzenie tablicy pikseli
 
         List<Double> horizontalLine = new ArrayList<>();
 
-        for (int i = 0; i < 100; i += 100 / network.getInputLayer().getSize()) {
+        for (int i = 0; i < 100; i += 100 / network.getInputLayer().getSize()) { // podział obrazu na linie
             int counterX = 0;
 
             for (int j = 0; j < 100; j += 100 / network.getInputLayer().getSize()) {
@@ -208,7 +208,7 @@ public class Controller implements Initializable {
                 }
             }
 
-            horizontalLine.add((double) counterX);
+            horizontalLine.add((double) counterX); // zapamiętanie zliczonych pikseli w punktach przecięcia
         }
 
         List<Double> summaryList = new ArrayList<>();
@@ -216,7 +216,7 @@ public class Controller implements Initializable {
         final Optional<Double> max = horizontalLine.stream().max(Comparator.naturalOrder());
         final Optional<Double> min = horizontalLine.stream().min(Comparator.naturalOrder());
 
-        horizontalLine.forEach(digit -> summaryList.add((digit - min.get()) / (max.get() - min.get())));
+        horizontalLine.forEach(digit -> summaryList.add((digit - min.get()) / (max.get() - min.get()))); // normalizacja
 
         List<Double> outputList = network.checkDataSet(summaryList);
 
@@ -226,7 +226,7 @@ public class Controller implements Initializable {
     }
 
     @FXML
-    private void clear() {
+    private void clear() { // wyczyszczenie pola do rysowania
         GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
         graphicsContext.clearRect(0, 0, canvas.getHeight(), canvas.getWidth());
     }
@@ -234,9 +234,11 @@ public class Controller implements Initializable {
 
 
     @FXML
-    private void learn() {
+    private void learn() { // konfiguracja sieci i proces nauczania
         errorProgressBar.setProgress(0.0);
         learnProgressBar.setProgress(0.0);
+
+        // ------- POBRANIE PÓL Z OKNA ---------- \\
 
         int eras = Integer.parseInt(erasTextField.getText());
         double learningRate = Double.parseDouble(learningRateTextField.getText());
@@ -247,7 +249,7 @@ public class Controller implements Initializable {
 
         Layer inputLayer;
 
-        if(inputs >= 10 && inputs <= 100 && inputs % 5 == 0) {
+        if(inputs >= 10 && inputs <= 100 && inputs % 5 == 0) { // utworzenie warstwy wejściowej
             inputLayer = new InputLayer(inputs);
         } else {
             inputLayer = new InputLayer(20);
@@ -255,16 +257,19 @@ public class Controller implements Initializable {
 
         Layer hiddenLayer;
 
-        if(hiddenNeurons > 0 && hiddenNeurons < 20) {
+        if(hiddenNeurons > 0 && hiddenNeurons < 20) { // utworzenie warstwy ukrytej
             hiddenLayer = new HiddenLayer(hiddenNeurons, inputLayer);
         } else {
             hiddenLayer = new HiddenLayer(4, inputLayer);
         }
 
-        Layer outputLayer = new OutputLayer(4, hiddenLayer);
+        Layer outputLayer = new OutputLayer(4, hiddenLayer); // utworzenie warstwy wyjściowej
 
-        network = new Network(inputLayer, hiddenLayer, outputLayer);
+        network = new Network(inputLayer, hiddenLayer, outputLayer); // zbudowanie sieci
         network.setController(this);
+
+
+        // ---------- KONFIGURACJA SIECI --------- \\
 
         if(minError < 1.0 && minError > 0.000001) {
             network.setMinError(minError);
@@ -284,19 +289,19 @@ public class Controller implements Initializable {
 
         File actualDir = new File(".\\images");
 
-        Arrays.asList(actualDir.listFiles()).forEach(file -> {
+        Arrays.asList(actualDir.listFiles()).forEach(file -> { // pobranie plików z folderu images i zapisanie ich jako dane uczące
             try {
                 BufferedImage bufferedImage = ImageIO.read(file);
 
 
-                BufferedImage scaledImage = Thumbnails.of(bufferedImage).forceSize(100, 100).asBufferedImage();
+                BufferedImage scaledImage = Thumbnails.of(bufferedImage).forceSize(100, 100).asBufferedImage(); // skalowanie do 100x100
 
 
-                int[][] result = convertTo2DWithoutUsingGetRGB(scaledImage);
+                int[][] result = convertTo2DWithoutUsingGetRGB(scaledImage); // utworzenie tablicy pikseli
 
                 List<Double> horizontalLine = new ArrayList<>();
 
-                for (int i = 0; i < 100; i += (100 / network.getInputLayer().getSize())) {
+                for (int i = 0; i < 100; i += (100 / network.getInputLayer().getSize())) { // podział na linie
                     int counterX = 0;
 
                     for (int j = 0; j < 100; j += (100 / network.getInputLayer().getSize())) {
@@ -306,7 +311,7 @@ public class Controller implements Initializable {
 
                     }
 
-                    horizontalLine.add((double) counterX);
+                    horizontalLine.add((double) counterX); // zapamiętanie zliczonych pikseli w punktach przecięcia
                 }
 
                 List<Double> summaryList = new ArrayList<>();
@@ -314,9 +319,9 @@ public class Controller implements Initializable {
                 final Optional<Double> max = horizontalLine.stream().max(Comparator.naturalOrder());
                 final Optional<Double> min = horizontalLine.stream().min(Comparator.naturalOrder());
 
-                horizontalLine.forEach(digit -> summaryList.add((digit - min.get()) / (max.get() - min.get())));
+                horizontalLine.forEach(digit -> summaryList.add((digit - min.get()) / (max.get() - min.get()))); // normalizacja
 
-                network.addOneDataSet(summaryList, getExpectedOutput(file.getName().split("_")[0]));
+                network.addOneDataSet(summaryList, getExpectedOutput(file.getName().split("_")[0])); // dodanie danych uczących
 
 
             } catch (IOException e) {
@@ -324,9 +329,9 @@ public class Controller implements Initializable {
             }
         });
 
-        new Thread(network::learn).start();
+        new Thread(network::learn).start(); // rozpoczęciu wątku w którym odbywa się nauczanie
 
-        new Thread(() -> {
+        new Thread(() -> { // wątek odpowiadający za aktualizację progress barów
             double progress;
 
             do {
@@ -344,7 +349,7 @@ public class Controller implements Initializable {
 
     }
 
-    public void appendLine(String text) {
+    public void appendLine(String text) { // metoda odpowiadająca za dodanie informacji do okna na logi
         Platform.runLater(() -> {
             outputs.appendText(text + "\n");
         });
@@ -354,7 +359,7 @@ public class Controller implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
 
-        canvas.setOnMouseDragged(e -> {
+        canvas.setOnMouseDragged(e -> { // konfiguracja pola do rysowania
             double size = 2;
             double x = e.getX() - size / 2;
             double y = e.getY() - size / 2;

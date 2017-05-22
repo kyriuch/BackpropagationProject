@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Layer {
-    private int size;
+    private int size; // ilość neuronów
 
-    protected List<Neuron> list = new ArrayList<>();
+    protected List<Neuron> list = new ArrayList<>(); // lista neuronów
 
-    Layer(int neurons) {
+    Layer(int neurons) { // inicjalizacja warstwy wejściowej
         size = neurons;
 
         for (int i = 0; i < neurons; i++) {
@@ -16,11 +16,11 @@ public class Layer {
         }
     }
 
-    Layer(int neurons, Layer leftLayer) {
+    Layer(int neurons, Layer leftLayer) {  // inicjalizacja warstwy ukrytej/wyjściowej
         size = neurons;
 
         for (int i = 0; i < neurons; i++) {
-            list.add(new Neuron(leftLayer.getList()));
+            list.add(new Neuron(leftLayer.getList())); // każdy neuron posiada listę neuronó warstwy położonej na lewo
         }
     }
 
