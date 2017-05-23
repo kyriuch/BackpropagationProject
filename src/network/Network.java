@@ -152,7 +152,7 @@ public class Network {
 
             overallError = calculateOverallError(); // obliczenie błędu ogólnego
 
-            if(iterator % (maxEras / 10) == 0) { // zapisanie informacji
+            if(iterator % (maxEras / 10) == 0 || iterator == (maxEras - 1)) { // zapisanie informacji
                 controller.appendLine("Era " + iterator + ".");
                 controller.appendLine("Błąd ogólny: " + overallError);
                 controller.appendLine("Osiągnięty % błędu: " + (minError / overallError * 100) + "%");
