@@ -31,7 +31,7 @@ public class Network {
 
     //------ CONFIGURATION --------\\
 
-    private int maxEras = 500000;
+    private int maxEras = 500;
     private double minError = 0.0001;
     private double learningRate = 0.2f;
     private double momentum = 0.4f;

@@ -7,14 +7,14 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.*?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="635.0" prefWidth="657.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="635.0" prefWidth="682.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
    <children>
       <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="200.0" layoutX="43.0" layoutY="54.0" stroke="BLACK" strokeType="INSIDE" width="200.0" />
       <Canvas fx:id="canvas" height="200.0" layoutX="43.0" layoutY="54.0" width="200.0" />
       <Button layoutX="43.0" layoutY="268.0" mnemonicParsing="false" onAction="#clear" text="Wyczyść okno" />
-      <Button layoutX="153.0" layoutY="268.0" mnemonicParsing="false" onAction="#check" text="Oblicz wyjście" />
+      <Button layoutX="178.0" layoutY="268.0" mnemonicParsing="false" onAction="#check" text="Oblicz wyjście" />
       <TextArea fx:id="outputs" editable="false" layoutX="43.0" layoutY="376.0" prefHeight="230.0" prefWidth="591.0" />
-      <Label fx:id="networkAnswer" layoutX="272.0" layoutY="293.0">
+      <Label fx:id="networkAnswer" layoutX="272.0" layoutY="304.0">
          <font>
             <Font size="18.0" />
          </font>
@@ -60,7 +60,7 @@
                   <Font size="14.0" />
                </font>
             </Label>
-            <TextField fx:id="erasTextField" text="50000" GridPane.columnIndex="1" />
+            <TextField fx:id="erasTextField" text="500" GridPane.columnIndex="1" />
             <TextField fx:id="learningRateTextField" text="0.2" GridPane.columnIndex="1" GridPane.rowIndex="1" />
             <TextField fx:id="momentumTextField" text="0.4" GridPane.columnIndex="1" GridPane.rowIndex="2" />
             <TextField fx:id="hiddenNeuronsTextField" text="6" GridPane.columnIndex="1" GridPane.rowIndex="3" />
