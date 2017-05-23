@@ -74,7 +74,7 @@ public class Controller implements Initializable {
     }*/
     }
 
-    private final char[] actualLetters = {'1', '2', '3', '4'}; // aktualnie rozpatrywane znaki
+    private final char[] actualLetters = {'a', 'b', 'g', 'y'}; // aktualnie rozpatrywane znaki
 
     private List<Double> getExpectedOutput(String digit) { // podanie oczekiwanego wyniku sieci z nazwy pliku
         if (digit.charAt(0) == actualLetters[0]) {
@@ -220,7 +220,7 @@ public class Controller implements Initializable {
 
         List<Double> outputList = network.checkDataSet(summaryList);
 
-        networkAnswer.setText("Wprowadzona liczba to najprawdopodobniej: " + actualLetters[outputList.indexOf(Collections.max(outputList))]);
+        networkAnswer.setText("Wprowadzony znak to najprawdopodobniej: " + actualLetters[outputList.indexOf(Collections.max(outputList))]);
 
         outputs.appendText(outputList.toString() + "\n");
     }
